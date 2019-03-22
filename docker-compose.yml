@@ -1,0 +1,81 @@
+version: '3.3'
+services:
+  zookeeper:
+        image: wurstmeister/zookeeper
+        container_name: zookeeper
+        ports:
+            - '2181:2181'
+        networks:
+            - knet 
+  kafka:
+    image: 'wurstmeister/kafka:latest'
+    container_name: kafka
+    ports:
+        -
+            target: 9094
+            published: 9094
+            protocol: tcp
+            mode: host
+    environment:
+        HOSTNAME_COMMAND: 'docker info | grep ^Name: | cut -d'' '' -f 2'
+        KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT'
+        KAFKA_ADVERTISED_LISTENERS: 'INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094'
+        KAFKA_LISTENERS: 'INSIDE://:9092,OUTSIDE://:9094'
+        KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+        KAFKA_PORT: 9092
+        KAFKA_CREATE_TOPICS: 'telegram:1:1'
+        KAFKA_JMX_PORT: 7071
+        KAFKA_MAX_MESSAGE_BYTES: 231072000
+        KAFKA_NUM_IO_THREADS: 5
+        KAFKA_SOCKET_SEND_BUFFER_BYTES: 202400
+        KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 202400
+        KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600
+        KAFKA_HEAP_OPTS: '-Xms512m -Xmx2048m'
+    volumes:
+        - '/var/run/docker.sock:/var/run/docker.sock'
+    networks:
+        - knet
+        
+  prometheus:
+      image: prom/prometheus
+      container_name: prometheus
+      networks:
+         - knet
+      ports:
+        - '9090:9090'
+        
+        
+  producer:
+    image: producer
+    build: ./producer
+    container_name: producer
+    restart: always
+    links:
+        - kafka
+    depends_on:
+        - kafka
+    ports:
+        - '8001:8001'
+    volumes:
+        - '/opt/producer/logs/:/opt/producer/logs'
+    networks:
+        - knet
+  stream:
+    image: stream
+    build: ./stream
+    container_name: stream
+    restart: always
+    links:
+        - kafka
+    depends_on:
+        - kafka
+    ports:
+        - '8002:8002'
+    volumes:
+        - '/opt/stream/logs/:/opt/stream/logs'
+    networks:
+        - knet
+networks:
+    knet:
+        driver: bridge

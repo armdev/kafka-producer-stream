@@ -1,0 +1,33 @@
+management:
+  security:  
+   enabled: false      
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+  endpoints:
+    jmx:
+      exposure:
+       include: '*'
+    web:
+     exposure:
+      include: '*'
+      base-path: /actuator
+    cors:
+      allowed-origins: 'true'
+      enabled-by-default: 'false'
+    
+server:
+    port: 8001
+    
+spring:
+  application:
+    name: producer
+        
+  kafka:
+    producer:
+      batch-size: 1048570000
+      bootstrap-servers: kafka:9092
+      buffer-memory: 20971520
+      client-id: producer
+      retries: 5    

@@ -1,0 +1,38 @@
+management:
+  security:  
+   enabled: false      
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+  endpoints:
+    jmx:
+      exposure:
+       include: '*'
+    web:
+     exposure:
+      include: '*'
+      base-path: /actuator
+    cors:
+      allowed-origins: 'true'
+      enabled-by-default: 'false'
+    
+server:
+    port: 8002
+    
+spring:
+  application:
+    name: stream
+        
+  kafka:
+    listener:
+      ack-mode: MANUAL    
+    consumer:
+      bootstrap-servers: kafka:9092
+      group-id: streamone       
+      auto-offset-reset: earliest         
+      enable-auto-commit: false
+      max-poll-records: 100
+      fetch-max-wait: 100
+      fetch-min-size: 104857600     
+       
